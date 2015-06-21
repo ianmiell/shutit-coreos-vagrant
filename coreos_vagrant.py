@@ -60,7 +60,7 @@ class coreos_vagrant(ShutItModule):
 		# shutit.set_password(password, user='')
 		#                                    - Set password for a given user on target
         vagrant_dir = shutit.cfg[self.module_id]['vagrant_dir']
-        shutit.install('virtualbox git',note='Installing virtualbox and git')
+        shutit.install('virtualbox git curl',note='Installing virtualbox and git')
         shutit.send('wget -qO- https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb > /tmp/vagrant.deb',note='Downloading vagrant and installing')
         shutit.send('dpkg -i /tmp/vagrant.deb')
         shutit.send('rm /tmp/vagrant.deb')
@@ -71,7 +71,9 @@ class coreos_vagrant(ShutItModule):
 		shutit.send('cd coreos-vagrant')
 		shutit.pause_point('')
 		# Get coreos id discovery token
+		token = shutit.send_and_get_output('curl https://discovery.etcd.io/new')
 		shutit.send('cp user-data.sample user-data')
+		shutit.replace_text('')
 		# update with token
 		shutit.send('cp config.rb.sample config.rb')
 		shutit.send('vagrant up')
