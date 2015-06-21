@@ -1,2 +1,1 @@
-# shutit-coreos-vagrant
-CoreOS Vagrant Module
+coreos_vagrant: description of module directory in here
