@@ -60,6 +60,10 @@ class coreos_vagrant(ShutItModule):
 		# shutit.set_password(password, user='')
 		#                                    - Set password for a given user on target
 		vagrant_dir = shutit.cfg[self.module_id]['vagrant_dir']
+		memavail = shutit.send_and_get_output("""cat /proc/meminfo  | grep MemAvailable | awk '{print $2}'""")
+		if int(memavail) < 3500000:
+			if not shutit.get_input('Memory available appears to be: ' + memavail + 'kB, need 3500000kB available to run.\nIf you want to continue, input "y"') != 'y':
+				shutit.fail('insufficient memory')
 		shutit.send('cd')
 		if shutit.send_and_get_output('''VBoxManage list runningvms | grep coreos-vagrant | grep -v 'not created' | awk '{print $1}' ''') != '':
 			if shutit.get_input('Clean up your VMs first, as there appears to be a running coreos-vagrant VM in existence. Want me to clean them up for you?',boolean=True):
