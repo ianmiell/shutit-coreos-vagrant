@@ -62,7 +62,7 @@ class coreos_vagrant(ShutItModule):
 		vagrant_dir = shutit.cfg[self.module_id]['vagrant_dir']
 		memavail = shutit.send_and_get_output("""cat /proc/meminfo  | grep MemAvailable | awk '{print $2}'""")
 		if int(memavail) < 3500000:
-			if not shutit.get_input('Memory available appears to be: ' + memavail + 'kB, need 3500000kB available to run.\nIf you want to continue, input "y"') != 'y':
+			if shutit.get_input('Memory available appears to be: ' + memavail + 'kB, need 3500000kB available to run.\nIf you want to continue, input "y"') != 'y':
 				shutit.fail('insufficient memory')
 		shutit.send('cd')
 		if shutit.send_and_get_output('''VBoxManage list runningvms | grep coreos-vagrant | grep -v 'not created' | awk '{print $1}' ''') != '':
