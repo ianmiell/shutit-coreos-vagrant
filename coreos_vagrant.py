@@ -59,27 +59,42 @@ class coreos_vagrant(ShutItModule):
 		# shutit.package_installed(package)  - Returns True if the package exists on the target
 		# shutit.set_password(password, user='')
 		#                                    - Set password for a given user on target
-        vagrant_dir = shutit.cfg[self.module_id]['vagrant_dir']
-        shutit.install('virtualbox git curl',note='Installing virtualbox and git')
-        shutit.send('wget -qO- https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb > /tmp/vagrant.deb',note='Downloading vagrant and installing')
-        shutit.send('dpkg -i /tmp/vagrant.deb')
-        shutit.send('rm /tmp/vagrant.deb')
-        shutit.send('mkdir -p ' + vagrant_dir)
-        shutit.send('cd ' + vagrant_dir)
-        shutit.send('cd')
+		vagrant_dir = shutit.cfg[self.module_id]['vagrant_dir']
+		shutit.send('cd')
+		if shutit.send_and_get_output('''VBoxManage list runningvms | grep coreos-vagrant | grep -v 'not created' | awk '{print $1}' ''') != '':
+			if shutit.get_input('Clean up your VMs first, as there appears to be a running coreos-vagrant VM in existence. Want me to clean them up for you?',boolean=True):
+				shutit.multisend('(cd coreos-vagrant && vagrant destroy)',{'y/N':'y'})
+		for c in ('virtualbox','git','curl'):
+			if not shutit.command_available(c):
+				if shutit.get_input(c + ' apparently not installed. Would you like me to install it for you?',boolean=True):
+					pw = shutit.get_input('Please input your sudo password in case it is needed.',ispass=True)
+					command = shutit.get_input('Please input your install command, eg "apt-get install -y", or "yum install -y"')
+					shutit.multisend('sudo ' + command + ' ' + c,{'assword':pw})
+		if not shutit.command_available('vagrant'):
+			shutit.send('wget -qO- https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb > /tmp/vagrant.deb',note='Downloading vagrant and installing')
+			shutit.send('dpkg -i /tmp/vagrant.deb')
+			shutit.send('rm /tmp/vagrant.deb')
+			shutit.send('mkdir -p ' + vagrant_dir)
+			shutit.send('cd ' + vagrant_dir)
+		shutit.send('cd')
+		shutit.send('rm -rf coreos-vagrant')
 		shutit.send('git clone https://github.com/coreos/coreos-vagrant.git',note='Get the coreos-vagrant github repo')
 		shutit.send('cd coreos-vagrant')
-		shutit.pause_point('')
 		# Get coreos id discovery token
 		token = shutit.send_and_get_output('curl https://discovery.etcd.io/new')
 		shutit.send('cp user-data.sample user-data')
-		shutit.replace_text('')
+		shutit.send('''sed -i 's@.*#discovery:.*@    discovery: ''' + token + '''@' user-data''')
+
 		# update with token
 		shutit.send('cp config.rb.sample config.rb')
+		shutit.replace_text('$num_instances=3','config.rb','^.num_instances=.*$')
 		shutit.send('vagrant up')
 		shutit.send_until('vagrant status','core-01.*running')
 		shutit.send_until('vagrant status','core-02.*running')
 		shutit.send_until('vagrant status','core-03.*running')
+		shutit.login(command='vagrant ssh core-01')
+		shutit.pause_point('You are now in your coreos cluster! Enjoy!\n\nIf you want to start again, ctrl-d out of here, run "vagrant destroy" and then re-run.')
+		shutit.logout()
 		return True
 
 
