@@ -71,7 +71,16 @@ class coreos_vagrant(ShutItModule):
 		shutit.send('git clone https://github.com/coreos/coreos-vagrant.git')
 		shutit.send('cd coreos-vagrant')
 		shutit.pause_point('')
+		# Get coreos id discovery token
+		shutit.send('cp user-data.sample user-data')
+		# update with token
+		shutit.send('cp config.rb.sample config.rb')
+		shutit.send('vagrant up')
+		shutit.send_until('vagrant status','core-01.*running')
+		shutit.send_until('vagrant status','core-02.*running')
+		shutit.send_until('vagrant status','core-03.*running')
 		return True
+
 
 	def get_config(self, shutit):
 		# CONFIGURATION
