@@ -60,15 +60,14 @@ class coreos_vagrant(ShutItModule):
 		# shutit.set_password(password, user='')
 		#                                    - Set password for a given user on target
         vagrant_dir = shutit.cfg[self.module_id]['vagrant_dir']
-        shutit.install('virtualbox')
-        shutit.install('git')
-        shutit.send('wget -qO- https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb > /tmp/vagrant.deb')
+        shutit.install('virtualbox git',note='Installing virtualbox and git')
+        shutit.send('wget -qO- https://dl.bintray.com/mitchellh/vagrant/vagrant_1.7.2_x86_64.deb > /tmp/vagrant.deb',note='Downloading vagrant and installing')
         shutit.send('dpkg -i /tmp/vagrant.deb')
         shutit.send('rm /tmp/vagrant.deb')
         shutit.send('mkdir -p ' + vagrant_dir)
         shutit.send('cd ' + vagrant_dir)
         shutit.send('cd')
-		shutit.send('git clone https://github.com/coreos/coreos-vagrant.git')
+		shutit.send('git clone https://github.com/coreos/coreos-vagrant.git',note='Get the coreos-vagrant github repo')
 		shutit.send('cd coreos-vagrant')
 		shutit.pause_point('')
 		# Get coreos id discovery token
