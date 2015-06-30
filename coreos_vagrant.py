@@ -130,6 +130,7 @@ def module():
 		'shutit.coreos_vagrant.coreos_vagrant.coreos_vagrant', 1308628950.00,
 		description='',
 		maintainer='',
+		delivery_methods = ('bash'),
 		depends=['shutit.tk.setup']
 	)
 

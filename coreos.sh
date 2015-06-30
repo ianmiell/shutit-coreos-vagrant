@@ -1,2 +1,2 @@
 #!/bin/bash
-shutit build -d bash
+shutit build -d bash "$@"
