@@ -60,14 +60,14 @@ class coreos_vagrant(ShutItModule):
 		# shutit.set_password(password, user='')
 		#                                    - Set password for a given user on target
 		vagrant_dir = shutit.cfg[self.module_id]['vagrant_dir']
+		if shutit.send_and_get_output('''VBoxManage list runningvms | grep coreos-vagrant | grep -v 'not created' | awk '{print $1}' ''') != '':
+			if shutit.get_input('Clean up your VMs first, as there appears to be a running coreos-vagrant VM in existence. Want me to clean them up for you (y/n)?',boolean=True):
+				shutit.multisend('(cd coreos-vagrant && vagrant destroy)',{'y/N':'y'})
 		memavail = shutit.get_memory()
 		if memavail < 3500000:
-			if shutit.get_input('Memory available appears to be: ' + str(memavail) + 'kB, need 3500000kB available to run.\nIf you want to continue, input "y"') != 'y':
+			if not shutit.get_input('Memory available appears to be: ' + str(memavail) + 'kB, need 3500000kB available to run.\nIf you want to continue, input "y", else "n"',boolean=True):
 				shutit.fail('insufficient memory')
 		shutit.send('cd')
-		if shutit.send_and_get_output('''VBoxManage list runningvms | grep coreos-vagrant | grep -v 'not created' | awk '{print $1}' ''') != '':
-			if shutit.get_input('Clean up your VMs first, as there appears to be a running coreos-vagrant VM in existence. Want me to clean them up for you?',boolean=True):
-				shutit.multisend('(cd coreos-vagrant && vagrant destroy)',{'y/N':'y'})
 		for c in ('virtualbox','git','curl'):
 			if not shutit.command_available(c):
 				if shutit.get_input(c + ' apparently not installed. Would you like me to install it for you?',boolean=True):
@@ -92,13 +92,12 @@ class coreos_vagrant(ShutItModule):
 		# update with token
 		shutit.send('cp config.rb.sample config.rb')
 		shutit.replace_text('$num_instances=3','config.rb','^.num_instances=.*$')
-		shutit.pause_point('')
 		shutit.send('vagrant up')
 		shutit.send_until('vagrant status','core-01.*running')
 		shutit.send_until('vagrant status','core-02.*running')
 		shutit.send_until('vagrant status','core-03.*running')
 		shutit.login(command='vagrant ssh core-01')
-		shutit.pause_point('You are now in your coreos cluster! Enjoy!\n\nIf you want to start again, ctrl-d out of here, run "vagrant destroy" and then re-run.')
+		shutit.pause_point('You are now in your coreos cluster! Enjoy!\n\nIf you want to start again, ctrl-d once to get out of this coreos machine, run "vagrant destroy" and then re-run.')
 		shutit.logout()
 		return True
 
