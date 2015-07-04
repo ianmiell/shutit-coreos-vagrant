@@ -87,11 +87,12 @@ class coreos_vagrant(ShutItModule):
 		# Get coreos id discovery token
 		token = shutit.send_and_get_output('curl https://discovery.etcd.io/new')
 		shutit.send('cp user-data.sample user-data')
-		shutit.send('''sed -i='' 's@.*#discovery:.*@    discovery: ''' + token + '''@' user-data''')
+		shutit.replace_text('''    discovery: ''' + token,'user-data','.*#discovery:.*')
 
 		# update with token
 		shutit.send('cp config.rb.sample config.rb')
 		shutit.replace_text('$num_instances=3','config.rb','^.num_instances=.*$')
+		shutit.pause_point('')
 		shutit.send('vagrant up')
 		shutit.send_until('vagrant status','core-01.*running')
 		shutit.send_until('vagrant status','core-02.*running')
